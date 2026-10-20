@@ -9,7 +9,7 @@ This repository contains the complete, reproducible simulation code, empirical b
 > **"Distribution-Free Uncertainty Quantification in Machine Learning: A Theoretical and Empirical Comparison of Conformal Prediction, Bayesian Credible Intervals, and Parametric Bootstrap in R"**  
 > **Authors:** Yuvraj Chandak (Reg. No.: `25BCE2561`) & Dr. Veermani S  
 > **Affiliation:** Vellore Institute of Technology (VIT), Vellore, Tamil Nadu, India  
-> **Repository:** [https://github.com/yuvrajchandak/distribution-free-uq-r](https://github.com/yuvrajchandak/distribution-free-uq-r)
+> **Repository:** [https://github.com/YuvrajC7/distribution-free-uncertainty-quantification](https://github.com/YuvrajC7/distribution-free-uncertainty-quantification)
 
 ---
 
@@ -138,7 +138,7 @@ If you use this codebase or paper in your research, please cite:
   author={Chandak, Yuvraj and Veermani, S.},
   journal={School of Computer Science and Engineering & Department of Mathematics, Vellore Institute of Technology},
   year={2026},
-  url={https://github.com/yuvrajchandak/distribution-free-uq-r}
+  url={https://github.com/YuvrajC7/distribution-free-uncertainty-quantification}
 }
 ```
 
