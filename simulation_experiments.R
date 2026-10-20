@@ -135,7 +135,11 @@ fit_parametric_bootstrap <- function(train_df, test_df, formula = y ~ poly(x1, 3
   X_te <- model.matrix(delete.response(terms_base), mf_te)
   n_te <- nrow(X_te)
   
-  # Vectorized parametric bootstrap draws under Gaussian assumption
+  # Vectorized parametric bootstrap draws under Gaussian assumption.
+  # Asymptotic note: Because sigma_hat is held fixed across resamples rather than
+  # re-estimated or sampled from a posterior, as B -> Inf the empirical quantiles 
+  # converge to the plug-in Gaussian predictive distribution N(X_te*beta_hat, sigma_hat^2*(1+h)),
+  # lacking the Student-t degrees-of-freedom adjustment present in OLS/Bayesian NIG.
   eps_boot_tr <- matrix(rnorm(n * B, mean = 0, sd = sigma_hat), nrow = n, ncol = B)
   Y_boot <- as.vector(X_tr %*% beta_hat) + eps_boot_tr
   
@@ -160,9 +164,15 @@ fit_split_conformal <- function(train_df, cal_df, test_df, alpha = 0.10) {
   cal_scores <- abs(cal_df$y - y_hat_cal)
   
   # Exact conformal quantile index: ceiling((n2 + 1) * (1 - alpha))
+  # In finite-sample conformal prediction theory (Vovk et al. 2005), 
+  # if k == n2 + 1, the cutoff is Inf. When n2 >= ceiling(1/alpha - 1)
+  # (e.g. n2 >= 9 for alpha = 0.10), k <= n2 holds strictly.
   k <- ceiling((n2 + 1) * (1 - alpha))
-  k <- min(k, n2)
-  q_hat <- sort(cal_scores)[k]
+  if (k > n2) {
+    q_hat <- Inf
+  } else {
+    q_hat <- sort(cal_scores)[k]
+  }
   
   # Test predictions
   y_hat_test <- predict(rf, data = test_df)$predictions
@@ -187,10 +197,13 @@ fit_cqr <- function(train_df, cal_df, test_df, alpha = 0.10) {
   # Signed conformity scores: E_i = max(q_low(X_i) - Y_i, Y_i - q_high(X_i))
   E_scores <- pmax(q_low_cal - cal_df$y, cal_df$y - q_high_cal)
   
-  # Conformal quantile adjustment
+  # Conformal quantile adjustment with finite-sample convention (Inf if k > n2)
   k <- ceiling((n2 + 1) * (1 - alpha))
-  k <- min(k, n2)
-  Q_conf <- sort(E_scores)[k]
+  if (k > n2) {
+    Q_conf <- Inf
+  } else {
+    Q_conf <- sort(E_scores)[k]
+  }
   
   # Test predictions
   test_preds <- predict(qrf, data = test_df, type = "quantiles", quantiles = q_levels)$predictions
