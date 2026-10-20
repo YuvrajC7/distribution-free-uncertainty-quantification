@@ -43,7 +43,9 @@ distribution-free-uq-r/
 ├── .gitignore                     # Git ignore rules for R environments
 ├── run_experiments.bat            # Windows one-click batch runner
 ├── simulation_experiments.R       # Complete standalone Monte Carlo simulation script
-├── update_csv_tables.R            # Replication-level Student's t-test recalculation script
+├── paper/                         # Academic manuscript and compiled IEEE PDF
+│   ├── research_paper.md          # Full academic paper in Markdown format
+│   └── Distribution_Free_UQ_Machine_Learning.pdf # Compiled IEEE 8-page publication PDF
 ├── figures/                       # High-resolution output figures (300 DPI)
 │   ├── fig1_prediction_bands.png
 │   ├── fig2_coverage_distribution.png
