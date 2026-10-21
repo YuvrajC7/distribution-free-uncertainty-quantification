@@ -5,9 +5,9 @@
 *Register No.:* `25BCE2561` | *Email:* `yuvraj.chandak2025@vitstudent.ac.in`  
 
 *Under the guidance of:*  
-**Dr. Veermani S**  
+**Dr. Veeramani S**  
 *Project Supervisor & Professor, Department of Mathematics*  
-*Vellore Institute of Technology, Vellore, Tamil Nadu, India* | *Email:* `veermani.s@vit.ac.in`  
+*School of Advanced Sciences, Vellore Institute of Technology, Vellore, Tamil Nadu, India* | *Email:* `veeramani.s@vit.ac.in`  
 
 ---
 

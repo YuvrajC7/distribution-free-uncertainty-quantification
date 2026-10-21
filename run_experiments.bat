@@ -3,7 +3,7 @@ setlocal enabledelayedexpansion
 
 echo ==============================================================================
 echo Distribution-Free Uncertainty Quantification in Machine Learning (R Pipeline)
-echo Author: Yuvraj Chandak (Reg. No.: 25BCE2561) ^| Supervisor: Dr. Veermani S
+echo Author: Yuvraj Chandak (Reg. No.: 25BCE2561) ^| Supervisor: Dr. Veeramani S
 echo Vellore Institute of Technology, Vellore, Tamil Nadu, India
 echo ==============================================================================
 
