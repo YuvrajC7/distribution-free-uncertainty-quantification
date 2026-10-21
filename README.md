@@ -43,9 +43,17 @@ distribution-free-uq-r/
 ├── .gitignore                     # Git ignore rules for R environments
 ├── run_experiments.bat            # Windows one-click batch runner
 ├── simulation_experiments.R       # Complete standalone Monte Carlo simulation script
-├── paper/                         # Academic manuscript and compiled IEEE PDF
+├── paper/                         # Academic manuscript, LaTeX source, and compiled IEEE PDF
 │   ├── research_paper.md          # Full academic paper in Markdown format
-│   └── Distribution_Free_UQ_Machine_Learning.pdf # Compiled IEEE 8-page publication PDF
+│   ├── Distribution_Free_UQ_Machine_Learning.pdf # Compiled IEEE 8-page publication PDF
+│   ├── Distribution_Free_UQ_Overleaf_Source.zip  # Ready-to-upload ZIP for Overleaf
+│   └── latex/                     # Standard IEEE LaTeX source code package
+│       ├── main.tex               # LaTeX master document (IEEEtran journal style)
+│       ├── references.bib         # Complete BibTeX bibliography (19 references)
+│       ├── IEEEtran.cls           # Official IEEE Transactions LaTeX document class
+│       ├── fig1_prediction_bands.png
+│       ├── fig2_coverage_distribution.png
+│       └── fig3_winkler_calibration_curve.png
 ├── figures/                       # High-resolution output figures (300 DPI)
 │   ├── fig1_prediction_bands.png
 │   ├── fig2_coverage_distribution.png
@@ -127,6 +135,23 @@ The script will:
 
 - **Exact Finite-Sample Validity:** Conformal methods show no statistically significant divergence from nominal $90\%$ across all synthetic regimes ($p \ge 0.138$).
 - **Winkler Efficiency:** Under heteroscedastic noise, CQR reduces proper Winkler scores to $9.756$ ($p = 2.22 \times 10^{-10}$ vs. OLS). On Boston housing, CQR yields a **$28.5\%$ reduction in Winkler score** ($p = 7.79 \times 10^{-10}$) and Split Conformal reduces width by **$32.8\%$** ($p = 1.19 \times 10^{-9}$).
+
+---
+
+## Overleaf & LaTeX Source Code
+
+The complete manuscript is authored in standard IEEE journal LaTeX format and is ready for compilation on [Overleaf](https://www.overleaf.com):
+
+- **Master Document:** [`paper/latex/main.tex`](paper/latex/main.tex) (IEEE Transactions style)
+- **Bibliography:** [`paper/latex/references.bib`](paper/latex/references.bib) (19 formatted citations)
+- **Document Class:** [`paper/latex/IEEEtran.cls`](paper/latex/IEEEtran.cls) (Official IEEE class file)
+- **Figures:** Embedded in `paper/latex/` (`fig1`, `fig2`, `fig3`)
+
+### Uploading to Overleaf (1-Click Setup):
+1. Download [`paper/Distribution_Free_UQ_Overleaf_Source.zip`](paper/Distribution_Free_UQ_Overleaf_Source.zip).
+2. Log into [Overleaf](https://www.overleaf.com), click **"New Project"** $\to$ **"Upload Project"**.
+3. Select `Distribution_Free_UQ_Overleaf_Source.zip`.
+4. Overleaf will automatically detect `main.tex` and compile the IEEE publication PDF instantly.
 
 ---
 
