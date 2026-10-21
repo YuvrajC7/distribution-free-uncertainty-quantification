@@ -12,9 +12,9 @@
 ---
 
 ## Abstract
-Standard machine learning models typically output single point predictions. While these point forecasts can be accurate on average, they provide no information about predictive uncertainty, dispersion, or tail risk. Classical uncertainty quantification methods—such as Ordinary Least Squares (OLS) prediction intervals, the parametric bootstrap, and Bayesian Normal-Inverse-Gamma conjugate models—rely on strong distributional assumptions, including Gaussian errors, constant variance (homoscedasticity), and correct likelihood specification. In contrast, conformal prediction is a distribution-free framework that guarantees valid prediction interval coverage in finite samples, assuming only that the data points are exchangeable. In this paper, we present a systematic theoretical and empirical comparison of five uncertainty quantification methods in R: parametric OLS, the parametric bootstrap, Bayesian Normal-Inverse-Gamma inference, Split Conformal Prediction, and Conformalized Quantile Regression (CQR). We evaluate these methods across $M = 100$ Monte Carlo replications under three distinct error regimes: standard Gaussian noise, heavy-tailed Student-$t_3$ noise, and heteroscedastic skewed noise, as well as on the benchmark Boston Housing dataset. Our results show that when Gaussian and homoscedastic assumptions fail, classical parametric and Bayesian methods suffer from coverage inflation ($92.7\%$ to $93.0\%$ at a nominal $90\%$ level) because extreme residuals inflate the estimated error variance. Conformal methods, by contrast, maintain empirical coverage consistent with the nominal $90\%$ target across all tested regimes. Furthermore, while standard split conformal intervals have fixed width, CQR dynamically adapts its interval width to local noise levels, achieving significantly lower Winkler scores under heteroscedasticity ($9.756 \pm 0.897$ versus $10.096 \pm 0.856$ for OLS; Wilcoxon $p = 2.22 \times 10^{-10}$). We also analyze practical trade-offs regarding calibration sample sizes, training data costs, and evaluate performance on real-world housing data. All code, datasets, and experiment scripts are made publicly available.
+**Abstract—Standard machine learning models typically output single point predictions. While these point forecasts can be accurate on average, they provide no information about predictive uncertainty, dispersion, or tail risk. Classical uncertainty quantification methods—such as Ordinary Least Squares (OLS) prediction intervals, the parametric bootstrap, and Bayesian Normal-Inverse-Gamma conjugate models—rely on strong distributional assumptions, including Gaussian errors, constant variance (homoscedasticity), and correct likelihood specification. In contrast, conformal prediction is a distribution-free framework that guarantees valid prediction interval coverage in finite samples, assuming only that the data points are exchangeable. In this paper, we present a systematic theoretical and empirical comparison of five uncertainty quantification methods in R: parametric OLS, the parametric bootstrap, Bayesian Normal-Inverse-Gamma inference, Split Conformal Prediction, and Conformalized Quantile Regression (CQR). We evaluate these methods across $M = 100$ Monte Carlo replications under three distinct error regimes: standard Gaussian noise, heavy-tailed Student-$t_3$ noise, and heteroscedastic skewed noise, as well as on the benchmark Boston Housing dataset. Our results show that when Gaussian and homoscedastic assumptions fail, classical parametric and Bayesian methods suffer from coverage inflation ($92.7\%$ to $93.0\%$ at a nominal $90\%$ level) because extreme residuals inflate the estimated error variance. Conformal methods, by contrast, maintain empirical coverage consistent with the nominal $90\%$ target across all tested regimes. Furthermore, while standard split conformal intervals have fixed width, CQR dynamically adapts its interval width to local noise levels, achieving significantly lower Winkler scores under heteroscedasticity ($9.756 \pm 0.897$ versus $10.096 \pm 0.856$ for OLS; Wilcoxon $p = 2.22 \times 10^{-10}$). We also analyze practical trade-offs regarding calibration sample sizes, training data costs, and evaluate performance on real-world housing data. All code, datasets, and experiment scripts are made publicly available.**
 
-**Index Terms:** Conformal Prediction, Exchangeability, Bayesian Inference, Parametric Bootstrap, Uncertainty Quantification, Finite-Sample Coverage, Non-Parametric Statistics, Machine Learning in R.
+**Index Terms—Conformal Prediction, Exchangeability, Bayesian Inference, Parametric Bootstrap, Uncertainty Quantification, Finite-Sample Coverage, Non-Parametric Statistics, Machine Learning in R.**
 
 **MSC 2020 Subject Classifications:** Primary 62G15; Secondary 62F15, 68T05, 62J02.
 
@@ -22,7 +22,7 @@ Standard machine learning models typically output single point predictions. Whil
 
 ## 1. Introduction & Problem Formulation
 
-Supervised machine learning algorithms, such as Random Forests, Gradient Boosted Decision Trees, and neural networks, are widely used across science and industry to make predictions from complex, high-dimensional data. Given a training dataset $\mathcal{D}_n = \{(X_i, Y_i)\}_{i=1}^n$ drawn from an unknown joint probability distribution $\mathcal{P}_{X,Y}$ on $\mathcal{X} \times \mathbb{R}$, where $\mathcal{X} \subseteq \mathbb{R}^d$, model training typically minimizes an empirical loss function:
+Supervised machine learning algorithms, such as Random Forests [3], Gradient Boosted Decision Trees [5], and deep neural networks [8], are widely used across science and industry to make predictions from complex, high-dimensional data. Given a training dataset $\mathcal{D}_n = \{(X_i, Y_i)\}_{i=1}^n$ drawn from an unknown joint probability distribution $\mathcal{P}_{X,Y}$ on $\mathcal{X} \times \mathbb{R}$, where $\mathcal{X} \subseteq \mathbb{R}^d$, model training typically minimizes an empirical loss function:
 $$
 \hat{R}_n(f) = \frac{1}{n} \sum_{i=1}^n \mathcal{L}\big(Y_i, f(X_i)\big).
 $$
@@ -44,11 +44,11 @@ $$
 Classical statistical frameworks—including Ordinary Least Squares (OLS) prediction intervals, parametric bootstrap resamples, and Bayesian credible intervals—estimate both uncertainty components under the assumption that the data follow a specified parametric family (typically a Gaussian distribution with constant variance). When these assumptions are violated by heavy tails, skewness, or heteroscedasticity, classical methods can produce miscalibrated prediction intervals.
 
 ### 1.2 Scope and Objectives
-Conformal prediction offers an appealing alternative: it guarantees valid marginal coverage in finite samples without requiring parametric distributional assumptions, relying only on data exchangeability (a property satisfied by independent and identically distributed data). 
+Conformal prediction offers an appealing alternative: it guarantees valid marginal coverage in finite samples without requiring parametric distributional assumptions, relying only on data exchangeability (a property satisfied by independent and identically distributed data) [1], [19]. 
 
-While the theoretical foundations of split conformal prediction (Papadopoulos et al., 2002; Lei et al., 2018) and Conformalized Quantile Regression (Romano et al., 2019) are established, practical comparisons across paradigms under identical data splits and varying noise conditions remain valuable for practitioners. The goals of this paper are:
+While the theoretical foundations of split conformal prediction [14], [12] and Conformalized Quantile Regression [15] are established, practical comparisons across paradigms under identical data splits and varying noise conditions remain valuable for practitioners. Furthermore, while packages in R such as `brms` [4], `tidymodels` [10], and `probably` [11] implement various facets of UQ, a unified comparison across these exact regimes has been lacking. The goals of this paper are:
 1. **A Unified Comparative Study in R:** We evaluate five distinct uncertainty quantification methods—parametric OLS, the parametric bootstrap, Bayesian Normal-Inverse-Gamma inference, Split Conformal Random Forests, and Conformalized Quantile Regression (CQR)—using a consistent evaluation framework in R.
-2. **Stress-Testing Under Model Misspecification:** We test how robust each method is when its underlying assumptions fail, using synthetic datasets with heavy-tailed Student-$t_3$ noise and heteroscedastic, right-skewed errors.
+2. **Stress-Testing Under Model Misspecification:** We test how robust each method is when its underlying assumptions fail, using synthetic datasets with heavy-tailed Student-$t_3$ noise ($\kappa = \infty$) and heteroscedastic, right-skewed errors ($\sigma(X_1) = 1 + 2|X_1|$).
 3. **Formal Statistical Evaluation:** We measure performance using replication-level Student's $t$-tests for empirical coverage, interval width, and strictly proper Winkler scores ($S_\alpha$) to assess overall interval quality.
 4. **Analysis of Practical Trade-offs:** We investigate the cost of reserving calibration data, examine the asymptotic behavior of fixed-variance bootstrap intervals, and study performance on the real-world Boston Housing benchmark dataset.
 
@@ -194,9 +194,9 @@ $$
 $$
 
 #### Misspecification and the Bernstein–von Mises Theorem
-Under a correctly specified likelihood, the Bernstein–von Mises Theorem (van der Vaart, 1998) guarantees that the posterior distribution of $\sqrt{n}(\theta - \theta_0)$ converges in total variation distance to a normal distribution with covariance equal to the inverse Fisher information $I(\theta_0)^{-1}$. In that case, Bayesian credible sets asymptotically match frequentist confidence sets. 
+Under a correctly specified likelihood, the Bernstein–von Mises Theorem (van der Vaart [17]) guarantees that the posterior distribution of $\sqrt{n}(\theta - \theta_0)$ converges in total variation distance to a normal distribution with covariance equal to the inverse Fisher information $I(\theta_0)^{-1}$. In that case, Bayesian credible sets asymptotically match frequentist confidence sets. 
 
-However, when the true distribution $P_0$ is not part of the assumed model family $\{P_\theta\}$, the posterior distribution concentrates around the pseudo-true parameter $\theta^*$ that minimizes the Kullback–Leibler divergence (Kleijn & van der Vaart, 2012). The Bayesian posterior variance is governed by the inverse Hessian of the misspecified log-likelihood, $H(\theta^*)^{-1}$, whereas the true frequentist sampling distribution of the maximum likelihood estimator follows the sandwich covariance matrix:
+However, when the true distribution $P_0$ is not part of the assumed model family $\{P_\theta\}$, the posterior distribution concentrates around the pseudo-true parameter $\theta^*$ that minimizes the Kullback–Leibler divergence (Kleijn and van der Vaart [9]). The Bayesian posterior variance is governed by the inverse Hessian of the misspecified log-likelihood, $H(\theta^*)^{-1}$, whereas the true frequentist sampling distribution of the maximum likelihood estimator follows the sandwich covariance matrix:
 $$
 \Sigma_{\text{freq}} = H(\theta^*)^{-1} \, J(\theta^*) \, H(\theta^*)^{-1},
 $$
@@ -205,7 +205,7 @@ where $J(\theta^*)$ is the covariance of the score function. Because $H \ne J$ u
 ---
 
 ### 2.4 Distribution-Free Conformal Prediction
-Conformal prediction (Vovk et al., 2005) provides valid predictive inference without requiring parametric assumptions about the data distribution.
+Conformal prediction (Vovk et al. [19]) provides valid predictive inference without requiring parametric assumptions about the data distribution.
 
 #### Exchangeability
 The only probabilistic assumption needed for conformal prediction is exchangeability. Let $Z_i = (X_i, Y_i) \in \mathcal{Z} = \mathcal{X} \times \mathbb{R}$ for $i = 1, \dots, n+1$.
@@ -217,11 +217,11 @@ $$
 Any sequence of independent and identically distributed (i.i.d.) random variables is exchangeable.
 
 #### Split Conformal Prediction
-Full conformal prediction requires re-fitting the prediction model across all possible candidate labels $y \in \mathbb{R}$, which is computationally prohibitive for complex algorithms. **Split Conformal Prediction** (Papadopoulos et al., 2002; Lei et al., 2018) avoids this by using a separate calibration dataset:
+Full conformal prediction requires re-fitting the prediction model across all possible candidate labels $y \in \mathbb{R}$, which is computationally prohibitive for complex algorithms. **Split Conformal Prediction** (Papadopoulos et al. [14]; Lei et al. [12]) avoids this by using a separate calibration dataset:
 1. **Data Partitioning:** Divide the available training data $\mathcal{D}_n$ into two disjoint subsets:
    - Proper Training Set: $\mathcal{D}_1 = \{(X_i, Y_i)\}_{i=1}^{n_1}$.
    - Calibration Set: $\mathcal{D}_2 = \{(X_i, Y_i)\}_{i=n_1+1}^{n_1+n_2}$, where $n_1 + n_2 = n$.
-2. **Model Training:** Fit a regression model $\hat{\mu}$ (such as a Random Forest) strictly on $\mathcal{D}_1$.
+2. **Model Training:** Fit a regression model $\hat{\mu}$ (such as a Random Forest [3]) strictly on $\mathcal{D}_1$.
 3. **Non-Conformity Scoring:** Compute residuals on the held-out calibration set:
    $$
    R_i = |Y_i - \hat{\mu}(X_i)|, \quad \forall i \in \mathcal{D}_2.
@@ -294,8 +294,8 @@ When ties are present and not randomized, the probability that $R_{n+1} \le R_{(
 ### 2.5 Conformalized Quantile Regression (CQR)
 While Split Conformal Prediction guarantees marginal coverage, its interval width $2\hat{q}_{1-\alpha}$ is constant across the entire feature space. Under heteroscedastic noise where $\text{Var}(\epsilon \mid X = x) = \sigma^2(x)$, constant-width intervals are inefficient: they are unnecessarily wide where noise is low and too narrow where noise is high.
 
-To solve this, Romano, Patterson, and Candès (2019) developed **Conformalized Quantile Regression (CQR)**, which combines quantile regression with conformal calibration:
-1. **Train Quantile Regressors:** On the training set $\mathcal{D}_1$, train a quantile regression model (e.g., Quantile Random Forests; Meinshausen, 2006) to predict the lower quantile $\alpha_{\text{lo}} = \alpha / 2$ and upper quantile $\alpha_{\text{hi}} = 1 - \alpha / 2$ by minimizing the pinball loss $\rho_\tau(u) = u(\tau - \mathbb{I}(u < 0))$:
+To solve this, Romano, Patterson, and Candès [15] developed **Conformalized Quantile Regression (CQR)**, which combines quantile regression with conformal calibration:
+1. **Train Quantile Regressors:** On the training set $\mathcal{D}_1$, train a quantile regression model (e.g., Quantile Random Forests; Meinshausen [13]) to predict the lower quantile $\alpha_{\text{lo}} = \alpha / 2$ and upper quantile $\alpha_{\text{hi}} = 1 - \alpha / 2$ by minimizing the pinball loss $\rho_\tau(u) = u(\tau - \mathbb{I}(u < 0))$:
    $$
    \hat{q}_{\alpha/2}, \, \hat{q}_{1-\alpha/2} = \arg\min_{q_{\text{lo}}, q_{\text{hi}}} \sum_{i \in \mathcal{D}_1} \left[ \rho_{\alpha/2}\big(Y_i - q_{\text{lo}}(X_i)\big) + \rho_{1-\alpha/2}\big(Y_i - q_{\text{hi}}(X_i)\big) \right].
    $$
@@ -311,12 +311,12 @@ To solve this, Romano, Patterson, and Candès (2019) developed **Conformalized Q
    \hat{C}_{\text{CQR}}(X_{n+1}) = \left[ \hat{q}_{\alpha/2}(X_{n+1}) - Q_{1-\alpha}, \quad \hat{q}_{1-\alpha/2}(X_{n+1}) + Q_{1-\alpha} \right].
    $$
 
-CQR guarantees finite-sample marginal coverage $\mathbb{P}(Y_{n+1} \in \hat{C}_{\text{CQR}}(X_{n+1})) \ge 1 - \alpha$ under exchangeability alone. If the base quantile estimators are consistent for the true conditional quantiles (Meinshausen, 2006), the calibration correction converges to zero ($Q_{1-\alpha} \xrightarrow{p} 0$), asymptotically achieving conditional coverage as well.
+Theorem 1 of Romano et al. [15] establishes that CQR guarantees finite-sample marginal coverage $\mathbb{P}(Y_{n+1} \in \hat{C}_{\text{CQR}}(X_{n+1})) \ge 1 - \alpha$ under exchangeability alone. If the base quantile estimators are consistent for the true conditional quantiles (Meinshausen [13]), the calibration correction converges to zero ($Q_{1-\alpha} \xrightarrow{p} 0$), asymptotically achieving conditional coverage as well.
 
 ---
 
 ### 2.6 Cross-Conformal Prediction and CV+
-Split conformal prediction incurs an efficiency loss because the calibration data ($n_2$) cannot be used for model training. To address this without the prohibitive computational cost of full conformal prediction, Barber et al. (2021) introduced **CV+**:
+Split conformal prediction incurs an efficiency loss because the calibration data ($n_2$) cannot be used for model training. To address this without the prohibitive computational cost of full conformal prediction, Barber et al. [2] introduced **CV+**:
 1. Partition the training indices $\{1, \dots, n\}$ into $K$ disjoint folds $S_1, \dots, S_K$.
 2. For each fold $k \in \{1, \dots, K\}$, train a model $\hat{\mu}_{-k}$ on data excluding fold $S_k$.
 3. For each $i \in S_k$, compute the out-of-fold residual $R_i = |Y_i - \hat{\mu}_{-k}(X_i)|$.
@@ -325,7 +325,7 @@ Split conformal prediction incurs an efficiency loss because the calibration dat
    \hat{C}_{n}^{\text{CV+}}(X_{n+1}) = \left[ \text{Quantile}\left( \sum_{i=1}^n \delta_{\hat{\mu}_{-k(i)}(X_{n+1}) - R_i}, \; \alpha \right), \quad \text{Quantile}\left( \sum_{i=1}^n \delta_{\hat{\mu}_{-k(i)}(X_{n+1}) + R_i}, \; 1 - \alpha \right) \right].
    $$
 
-Theorem 1 of Barber et al. (2021) establishes that for symmetric base training algorithms, CV+ guarantees:
+Theorem 1 of Barber et al. [2] establishes that for symmetric base training algorithms, CV+ guarantees:
 $$
 \mathbb{P}\big(Y_{n+1} \in \hat{C}_{n}^{\text{CV+}}(X_{n+1})\big) \ge 1 - 2\alpha - \min\left(2\alpha, \, \frac{2}{n + 1}\right),
 $$
@@ -396,7 +396,7 @@ $$
 $$
 
 #### 3. Winkler Score ($S_\alpha$)
-The Winkler score (Gneiting & Raftery, 2007) is a strictly proper scoring rule that rewards narrow intervals while penalizing points that fall outside the interval:
+The Winkler score (Gneiting and Raftery [7]) is a strictly proper scoring rule that rewards narrow intervals while penalizing points that fall outside the interval:
 $$
 S_\alpha\big(\hat{L}, \hat{U}; \, y\big) = (\hat{U} - \hat{L}) + \frac{2}{\alpha}(\hat{L} - y)\mathbb{I}(y < \hat{L}) + \frac{2}{\alpha}(y - \hat{U})\mathbb{I}(y > \hat{U}).
 $$
@@ -412,7 +412,7 @@ t = \frac{\overline{\text{ECR}} - (1 - \alpha)}{s_{\text{ECR}} / \sqrt{M}} \sim 
 $$
 with $M - 1 = 99$ degrees of freedom.
 
-For the Boston housing benchmark ($B = 50$ splits), repeated random splits of the same $506$ rows share observations, which induces positive correlation across splits (Dietterich, 1998; Nadeau & Bengio, 2003). Therefore, reported $t$-statistics on the Boston benchmark are descriptive summaries of split stability rather than formal hypothesis tests on independent samples.
+For the Boston housing benchmark ($B = 50$ splits), repeated random splits of the same $506$ rows share observations, which induces positive correlation across splits. Therefore, reported $t$-statistics on the Boston benchmark are descriptive summaries of split stability rather than formal hypothesis tests on independent samples.
 
 #### 5. Paired Wilcoxon Signed-Rank Test
 To evaluate whether differences in Winkler scores between methods are statistically significant, we perform paired Wilcoxon signed-rank tests on the differences $D_m = \bar{S}_{\alpha, m}^{(\text{Method})} - \bar{S}_{\alpha, m}^{(\text{Param})}$ across the $M = 100$ replications.
@@ -692,9 +692,9 @@ Split conformal prediction requires partitioning $N$ observations into $n_1$ tra
    $$
    \text{Var}(\hat{q}_{1-\alpha} \mid \mathcal{D}_1) \approx \frac{\alpha(1 - \alpha)}{n_2 \, [f_R(q_{1-\alpha})]^2}.
    $$
-   This causes conditional test coverage $\mathbb{P}(Y_{n+1} \in \hat{C}_n(X_{n+1}) \mid \mathcal{D}_n)$ to fluctuate around the marginal $1 - \alpha$ target. Vovk (2012) showed that the conditional coverage variance scales as $\mathcal{O}(1/n_2)$.
+   This causes conditional test coverage $\mathbb{P}(Y_{n+1} \in \hat{C}_n(X_{n+1}) \mid \mathcal{D}_n)$ to fluctuate around the marginal $1 - \alpha$ target. Vovk [18] showed that the conditional coverage variance scales as $\mathcal{O}(1/n_2)$.
 
-When total sample size is small ($N < 300$), CV+ or Jackknife+ (Barber et al., 2021) should be preferred to avoid splitting data. When $N$ is moderately large, allocating $65\% - 75\%$ of the non-test data to training ($n_1$) and $25\% - 35\%$ to calibration ($n_2$) provides an effective balance.
+When total sample size is small ($N < 300$), CV+ or Jackknife+ (Barber et al. [2]) should be preferred to avoid splitting data. When $N$ is moderately large, allocating $65\% - 75\%$ of the non-test data to training ($n_1$) and $25\% - 35\%$ to calibration ($n_2$) provides an effective balance.
 
 ---
 
@@ -709,7 +709,7 @@ $$
 $$
 is mathematically impossible for continuous non-atomic distributions in finite samples without producing infinitely wide intervals:
 
-**Theorem 2 (Impossibility of Conditional Coverage; Vovk, 2012; Barber et al., 2021):**  
+**Theorem 2 (Impossibility of Conditional Coverage; Vovk [18]; Barber et al. [2]):**  
 *Let $\mathcal{P}$ be the family of all non-atomic distributions on $\mathcal{X} \times \mathbb{R}$. If a prediction interval $\hat{C}_n$ satisfies:*
 $$
 \mathbb{P}_{(X, Y) \sim P}\big(Y_{n+1} \in \hat{C}_n(X_{n+1}) \mid X_{n+1} = x\big) \ge 1 - \alpha, \quad \text{for almost all } x \text{ and all } P \in \mathcal{P},
@@ -719,19 +719,19 @@ $$
 \text{Lebesgue}\big(\hat{C}_n(x)\big) = \infty \quad \text{almost surely.}
 $$
 
-CQR resolves this limitation practically: it provides guaranteed marginal coverage under exchangeability, while adapting interval width to local noise levels. If the base quantile models are consistent for the true conditional quantiles (Meinshausen, 2006), CQR asymptotically recovers conditional coverage as sample size grows.
+CQR resolves this limitation practically: it provides guaranteed marginal coverage under exchangeability, while adapting interval width to local noise levels. If the base quantile models are consistent for the true conditional quantiles (Meinshausen [13]), CQR asymptotically recovers conditional coverage as sample size grows.
 
 ---
 
 ### 6.3 Covariate Shift & Weighted Conformal Prediction
 Theorem 1 requires exchangeability of the observations $(Z_1, \dots, Z_{n+1})$. This condition can fail in practical scenarios:
-1. **Time-Series and Serial Correlation:** When observations exhibit autocorrelation ($\text{Cov}(Y_t, Y_{t-k}) \ne 0$), permutation invariance fails. Methods like Adaptive Conformal Inference (Gibbs & Candès, 2021) dynamically adjust the nominal level $\alpha_t$ to maintain long-term coverage under distribution drift.
+1. **Time-Series and Serial Correlation:** When observations exhibit autocorrelation ($\text{Cov}(Y_t, Y_{t-k}) \ne 0$), permutation invariance fails. Methods like Adaptive Conformal Inference (Gibbs and Candès [6]) dynamically adjust the nominal level $\alpha_t$ to maintain long-term coverage under distribution drift.
 2. **Covariate Shift:** Covariate shift occurs when the input distribution changes between training and testing, but the conditional relationship $Y \mid X$ remains unchanged:
    $$
    P_{\text{train}}(X) \ne P_{\text{test}}(X), \quad P_{\text{train}}(Y \mid X) = P_{\text{test}}(Y \mid X).
    $$
 
-Tibshirani et al. (2019) proved that **Weighted Conformal Prediction** restores exact finite-sample coverage under covariate shift if the likelihood ratio $w(x) = \frac{dP_{\text{test}}(x)}{dP_{\text{train}}(x)}$ is known exactly. The normalized weights are:
+Tibshirani et al. [16] proved that **Weighted Conformal Prediction** restores exact finite-sample coverage under covariate shift if the likelihood ratio $w(x) = \frac{dP_{\text{test}}(x)}{dP_{\text{train}}(x)}$ is known exactly. The normalized weights are:
 $$
 p_i(X_{n+1}) = \frac{w(X_i)}{\sum_{j=1}^{n_2} w(X_j) + w(X_{n+1})}, \quad i \in \{1, \dots, n_2\},
 $$
@@ -746,7 +746,7 @@ When the density ratio $w(x)$ is estimated from data (e.g., using logistic regre
 Our empirical findings should be considered alongside several practical factors:
 1. **Simulation Replication Budget:** While $M = 100$ Monte Carlo replications provided sufficient power to distinguish coverage differences under misspecification ($p < 10^{-15}$), running larger replication budgets ($M \ge 1,000$) would further narrow Monte Carlo standard errors.
 2. **Data Splitting Overhead:** Split conformal methods require holding out calibration data, reducing the sample size available for training the underlying regression model.
-3. **Repeated Split Correlation:** Repeated random splits of the Boston Housing dataset share observations, meaning performance metrics across splits are positively correlated (Dietterich, 1998; Nadeau & Bengio, 2003). Therefore, statistics from repeated splits should be interpreted as measures of split stability rather than independent hypothesis tests.
+3. **Repeated Split Correlation:** Repeated random splits of the Boston Housing dataset share observations, meaning performance metrics across splits are positively correlated. Therefore, statistics from repeated splits should be interpreted as measures of split stability rather than independent hypothesis tests.
 
 ---
 
@@ -760,22 +760,22 @@ Our simulation results in R demonstrate that while classical parametric and Baye
 
 ## 8. References
 
-1. Angelopoulos, A. N., & Bates, S. (2023). Conformal prediction: A gentle introduction. *Foundations and Trends in Machine Learning*, 16(4), 494–591.
-2. Barber, R. F., Candès, E. J., Ramdas, A., & Tibshirani, R. J. (2021). Predictive inference with the jackknife+. *The Annals of Statistics*, 49(1), 486–507.
-3. Breiman, L. (2001). Random forests. *Machine Learning*, 45(1), 5–32.
-4. Bürkner, P. C. (2017). brms: An R package for Bayesian multilevel models using Stan. *Journal of Statistical Software*, 80(1), 1–28.
-5. Chen, T., & Guestrin, C. (2016). XGBoost: A scalable tree boosting system. *Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining*, 785–794.
-6. Gibbs, C., & Candès, E. (2021). Adaptive conformal inference under distribution shift. *Advances in Neural Information Processing Systems (NeurIPS)*, 34, 1660–1672.
-7. Gneiting, T., & Raftery, A. E. (2007). Strictly proper scoring rules, prediction, and estimation. *Journal of the American Statistical Association*, 102(477), 359–378.
-8. Goodfellow, I., Bengio, Y., & Courville, A. (2016). *Deep Learning*. MIT Press.
-9. Kleijn, B. J. K., & van der Vaart, A. W. (2012). The Bernstein-von-Mises theorem under misspecification. *Electronic Journal of Statistics*, 6, 354–381.
-10. Kuhn, M., & Wickham, H. (2020). *Tidymodels: A collection of packages for modeling and machine learning using tidyverse principles*. Posit / RStudio.
-11. Kuhn, M., Vaughan, D., & Ruiz, E. (2025). *probably: Tools for Post-Processing Predicted Values*. R package version 1.2.0, CRAN.
-12. Lei, J., G'Sell, M., Rinaldo, A., Tibshirani, R. J., & Wasserman, L. (2018). Distribution-free predictive inference for regression. *Journal of the American Statistical Association*, 113(523), 1094–1111.
-13. Meinshausen, N. (2006). Quantile random forests. *Journal of Machine Learning Research*, 7, 983–999.
-14. Papadopoulos, H., Proedrou, K., Vovk, V., & Gammerman, A. (2002). Inductive confidence machines for regression. *European Conference on Machine Learning (ECML)*, 345–356. Springer.
-15. Romano, Y., Patterson, E., & Candès, E. (2019). Conformalized quantile regression. *Advances in Neural Information Processing Systems (NeurIPS)*, 32, 3543–3553.
-16. Tibshirani, R. J., Foygel Barber, R., Candès, E., & Ramdas, A. (2019). Conformal prediction under covariate shift. *Advances in Neural Information Processing Systems (NeurIPS)*, 32, 2530–2540.
-17. van der Vaart, A. W. (1998). *Asymptotic Statistics*. Cambridge University Press.
-18. Vovk, V. (2012). Conditional validity of inductive conformal predictors. *Machine Learning*, 92(2), 349–376.
-19. Vovk, V., Gammerman, A., & Shafer, G. (2005). *Algorithmic Learning in a Random World*. Springer Science & Business Media.
+[1] A. N. Angelopoulos and S. Bates, "Conformal prediction: A gentle introduction," *Foundations and Trends in Machine Learning*, vol. 16, no. 4, pp. 494–591, 2023.  
+[2] R. F. Barber, E. J. Candès, A. Ramdas, and R. J. Tibshirani, "Predictive inference with the jackknife+," *The Annals of Statistics*, vol. 49, no. 1, pp. 486–507, 2021.  
+[3] L. Breiman, "Random forests," *Machine Learning*, vol. 45, no. 1, pp. 5–32, 2001.  
+[4] P. C. Bürkner, "brms: An R package for Bayesian multilevel models using Stan," *Journal of Statistical Software*, vol. 80, no. 1, pp. 1–28, 2017.  
+[5] T. Chen and C. Guestrin, "XGBoost: A scalable tree boosting system," in *Proc. 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining*, 2016, pp. 785–794.  
+[6] C. Gibbs and E. Candès, "Adaptive conformal inference under distribution shift," in *Advances in Neural Information Processing Systems (NeurIPS)*, vol. 34, 2021, pp. 1660–1672.  
+[7] T. Gneiting and A. E. Raftery, "Strictly proper scoring rules, prediction, and estimation," *Journal of the American Statistical Association*, vol. 102, no. 477, pp. 359–378, 2007.  
+[8] I. Goodfellow, Y. Bengio, and A. Courville, *Deep Learning*. Cambridge, MA: MIT Press, 2016.  
+[9] B. J. K. Kleijn and A. W. van der Vaart, "The Bernstein-von-Mises theorem under misspecification," *Electronic Journal of Statistics*, vol. 6, pp. 354–381, 2012.  
+[10] M. Kuhn and H. Wickham, *Tidymodels: A collection of packages for modeling and machine learning using tidyverse principles*, Posit / RStudio, 2020.  
+[11] M. Kuhn, D. Vaughan, and E. Ruiz, *probably: Tools for Post-Processing Predicted Values*, R package version 1.2.0, CRAN, 2025.  
+[12] J. Lei, M. G'Sell, A. Rinaldo, R. J. Tibshirani, and L. Wasserman, "Distribution-free predictive inference for regression," *Journal of the American Statistical Association*, vol. 113, no. 523, pp. 1094–1111, 2018.  
+[13] N. Meinshausen, "Quantile random forests," *Journal of Machine Learning Research*, vol. 7, pp. 983–999, 2006.  
+[14] H. Papadopoulos, K. Proedrou, V. Vovk, and A. Gammerman, "Inductive confidence machines for regression," in *Proc. European Conference on Machine Learning (ECML)*, 2002, pp. 345–356.  
+[15] Y. Romano, E. Patterson, and E. Candès, "Conformalized quantile regression," in *Advances in Neural Information Processing Systems (NeurIPS)*, vol. 32, 2019, pp. 3543–3553.  
+[16] R. J. Tibshirani, R. Foygel Barber, E. Candès, and A. Ramdas, "Conformal prediction under covariate shift," in *Advances in Neural Information Processing Systems (NeurIPS)*, vol. 32, 2019, pp. 2530–2540.  
+[17] A. W. van der Vaart, *Asymptotic Statistics*. Cambridge: Cambridge University Press, 1998.  
+[18] V. Vovk, "Conditional validity of inductive conformal predictors," *Machine Learning*, vol. 92, no. 2, pp. 349–376, 2012.  
+[19] V. Vovk, A. Gammerman, and G. Shafer, *Algorithmic Learning in a Random World*. New York: Springer, 2005.  
